@@ -66,4 +66,8 @@ document.getElementById("employeeExcel").addEventListener("change", (e) => {
     });
     const list = document.getElementById("employeeList");
     list.innerHTML = employees.map((e) => `<li>${e.id} - ${e.name}</li>`).join("");
- 
+  };
+  reader.readAsArrayBuffer(file);
+});
+
+updateInventoryTable();
