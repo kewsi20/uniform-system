@@ -1,10 +1,20 @@
 {
   "T-shirt": {
-    "S": 1, "M": 1, "L": 1, "XL": 1,
-    "XXL": 1, "XXXL": 1, "XXXXL": 1
+    "S": 0,
+    "M": 0,
+    "L": 0,
+    "XL": 0,
+    "XXL": 0,
+    "XXXL": 0,
+    "XXXXL": 0
   },
   "Pants": {
-    "S": 0, "M": 0, "L": 0, "XL": 0,
-    "XXL": 0, "XXXL": 0, "XXXXL": 0
+    "S": 0,
+    "M": 0,
+    "L": 0,
+    "XL": 0,
+    "XXL": 0,
+    "XXXL": 0,
+    "XXXXL": 0
   }
 }
