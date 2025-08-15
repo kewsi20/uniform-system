@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>制服領取管理系統</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body class="container py-4">
+  <h2 class="mb-4">👕 制服領取管理系統</h2>
+
+  <!-- 員工選擇 -->
+  <div class="mb-3">
+    <label for="employeeSelect" class="form-label">選擇員工</label>
+    <select id="employeeSelect" class="form-select"></select>
+  </div>
+
+  <!-- Excel 上傳 -->
+  <div class="mb-3">
+    <label for="excelUpload" class="form-label">上傳員工名單（Excel）</label>
+    <input type="file" id="excelUpload" class="form-control" accept=".xlsx,.xls" onchange="handleExcel(event)">
+  </div>
+
+  <!-- 領取表單 -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <label class="form-label">制服類型</label>
+      <select id="type" class="form-select">
+        <option>T-shirt</option>
+        <option>Pants</option>
+      </select>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">尺寸</label>
+      <select id="size" class="form-select">
+        <option>S</option><option>M</option><option>L</option><option>XL</option>
+      </select>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">數量</label>
+      <input type="number" id="quantity" class="form-control" min="1" value="1">
+    </div>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">領取日期</label>
+    <input type="date" id="date" class="form-control" value="2025-08-15">
+  </div>
+
+  <button class="btn btn-primary mb-4" onclick="submitRecord()">提交領取</button>
+
+  <!-- 庫存顯示 -->
+  <h4>📦 目前庫存</h4>
+  <table class="table table-bordered" id="inventoryTable"></table>
+
+  <!-- 新增庫存 -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <label class="form-label">新增制服類型</label>
+      <select id="editType" class="form-select"><option>T-shirt</option><option>Pants</option></select>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">尺寸</label>
+      <select id="editSize" class="form-select"><option>S</option><option>M</option><option>L</option><option>XL</option></select>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">新增數量</label>
+      <input type="number" id="editQty" class="form-control">
+    </div>
+  </div>
+  <button class="btn btn-success mb-4" onclick="addInventory()">新增庫存</button>
+
+  <!-- PDF 報表 -->
+  <h4>📄 下載報表</h4>
+  <button class="btn btn-secondary" onclick="downloadPDF()">下載 PDF（模擬）</button>
+
+  <script>
+    let employees = {};
+    const inventory = {
+      "T-shirt": { S: 10, M: 8, L: 6, XL: 4 },
+      "Pants":   { S: 12, M: 9, L: 7, XL: 5 }
+    };
+    const records = [];
+
+    function populateEmployees() {
+      const select = document.getElementById("employeeSelect");
+      select.innerHTML = "";
+      for (let id in employees) {
+        const option = document.createElement("option");
+        option.value = id;
+        option.text = `${id} - ${employees[id]}`;
+        select.appendChild(option);
+      }
+    }
+
+    function handleExcel(event) {
+      const file = event.target.files[0];
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet);
+        employees = {};
+        rows.forEach(row => {
+          if (row["員工編號"] && row["姓名"]) {
+            employees[row["員工編號"]] = row["姓名"];
+          }
+        });
+        populateEmployees();
+        alert("員工名單已匯入！");
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function updateInventoryTable() {
+      const table = document.getElementById("inventoryTable");
+      table.innerHTML = "<tr><th>類型</th><th>尺寸</th><th>數量</th></tr>";
+      for (let type in inventory) {
+        for (let size in inventory[type]) {
+          table.innerHTML += `<tr><td>${type}</td><td>${size}</td><td>${inventory[type][size]}</td></tr>`;
+        }
+      }
+    }
+
+    function submitRecord() {
+      const id = document.getElementById("employeeSelect").value;
+      const type = document.getElementById("type").value;
+      const size = document.getElementById("size").value;
+      const qty = parseInt(document.getElementById("quantity").value);
+      const date = document.getElementById("date").value;
+      if (inventory[type][size] >= qty) {
+        inventory[type][size] -= qty;
+        records.push({ id, name: employees[id], type, size, qty, date });
+        alert("領取成功！");
+        updateInventoryTable();
+      } else {
+        alert("庫存不足！");
+      }
+    }
+
+    function addInventory() {
+      const type = document.getElementById("editType").value;
+      const size = document.getElementById("editSize").value;
+      const qty = parseInt(document.getElementById("editQty").value);
+      if (!isNaN(qty)) {
+        inventory[type][size] += qty;
+        updateInventoryTable();
+        alert(`已新增 ${qty} 件 ${type} 尺寸 ${size}`);
+      }
+    }
+
+    function downloadPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      let y = 10;
+      doc.setFontSize(12);
+      doc.text("制服領取報表", 10, y); y += 10;
+
+      const grouped = {};
+      records.forEach(r => {
+        if (!grouped[r.id]) grouped[r.id] = { name: r.name, pickups: [] };
+        grouped[r.id].pickups.push(`${r.date}：${r.type} 尺寸 ${r.size} x${r.qty}`);
+      });
+
+      for (let id in grouped) {
+        doc.text(`員工編號：${id}`, 10, y); y += 6;
+        doc.text(`姓名：${grouped[id].name}`, 10, y); y += 6;
+        doc.text("領取紀錄：", 10, y); y += 6;
+        grouped[id].pickups.forEach(p => {
+          doc.text(`- ${p}`, 15, y); y += 6;
+        });
+        y += 4;
+      }
+
+      doc.text("目前庫存：", 10, y); y += 6;
+      for (let type in inventory) {
+        for (let size in inventory[type]) {
+          doc.text(`${type} 尺寸 ${size}：${inventory[type][size]} 件`, 15, y); y += 6;
+        }
+      }
+
+      doc.save("制服領取報表.pdf");
+    }
+
+    updateInventoryTable();
+  </script>
+</body>
+</html>
