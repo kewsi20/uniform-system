@@ -7,6 +7,10 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+  <style>
+    .low-stock { color: red; font-weight: bold; }
+    #lastUpdated { font-size: 0.9em; color: #555; }
+  </style>
 </head>
 <body class="container py-4">
   <h2 class="mb-4">👕 制服領取系統</h2>
@@ -73,6 +77,7 @@
 
   <!-- 庫存表 -->
   <h4 class="mt-4">📦 目前庫存</h4>
+  <div id="lastUpdated" class="mb-2">最後更新時間：尚未更新</div>
   <table class="table table-bordered" id="inventoryTable"></table>
 
   <div id="result" class="mt-3 text-success fw-bold"></div>
