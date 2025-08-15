@@ -1,13 +1,11 @@
-/* 全局背景与字体 */
 body {
     font-family: 'Segoe UI', Arial, sans-serif;
-    background-color: #fafafa; /* 奶白色背景 */
+    background-color: #fafafa;
     margin: 0;
     padding: 20px;
     color: #333;
 }
 
-/* 容器布局 */
 .container {
     max-width: 900px;
     margin: auto;
@@ -17,7 +15,6 @@ body {
     box-shadow: 0 4px 15px rgba(0,0,0,0.05);
 }
 
-/* 标题样式 */
 h1 {
     text-align: center;
     color: #444;
@@ -32,7 +29,6 @@ h2 {
     font-size: 1.2rem;
 }
 
-/* 表单和按钮 */
 form {
     display: flex;
     flex-wrap: wrap;
@@ -64,7 +60,6 @@ button:hover {
     background-color: #45a049;
 }
 
-/* 表格样式 */
 table {
     width: 100%;
     border-collapse: collapse;
@@ -85,15 +80,6 @@ th {
     background-color: #ffe5e5 !important;
 }
 
-/* 文件上传按钮美化 */
-input[type="file"] {
-    padding: 5px;
-    background-color: #fff;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-}
-
-/* 时间提示 */
 #lastUpdate {
     text-align: right;
     font-size: 0.9rem;
@@ -101,7 +87,6 @@ input[type="file"] {
     margin-top: 5px;
 }
 
-/* 员工列表 */
 #employeeList {
     list-style: none;
     padding-left: 0;
