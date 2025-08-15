@@ -2,12 +2,36 @@ let employees = [];
 let inventory = {};
 const records = [];
 
-async function loadEmployees() {
-  const res = await fetch('employees.json');
-  employees = await res.json();
+document.getElementById('excelUpload').addEventListener('change', handleExcelUpload);
+document.getElementById('submitBtn').addEventListener('click', submitRecord);
+document.getElementById('downloadPdfBtn').addEventListener('click', generatePDF);
+document.getElementById('addStockBtn').addEventListener('click', addStock);
+document.getElementById('employeeSearch').addEventListener('input', filterEmployees);
+
+async function loadInventory() {
+  const res = await fetch('inventory.json');
+  inventory = await res.json();
+  updateInventoryTable();
+}
+
+function handleExcelUpload(event) {
+  const file = event.target.files[0];
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    const data = new Uint8Array(e.target.result);
+    const workbook = XLSX.read(data, { type: 'array' });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const json = XLSX.utils.sheet_to_json(sheet);
+    employees = json.map(row => ({ id: String(row['employee id']), name: row['name'] }));
+    populateEmployeeSelect(employees);
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function populateEmployeeSelect(list) {
   const select = document.getElementById('employeeSelect');
   select.innerHTML = '';
-  employees.forEach(emp => {
+  list.forEach(emp => {
     const option = document.createElement('option');
     option.value = emp.id;
     option.textContent = `${emp.id} - ${emp.name}`;
@@ -15,10 +39,12 @@ async function loadEmployees() {
   });
 }
 
-async function loadInventory() {
-  const res = await fetch('inventory.json');
-  inventory = await res.json();
-  updateInventoryTable();
+function filterEmployees() {
+  const keyword = document.getElementById('employeeSearch').value.toLowerCase();
+  const filtered = employees.filter(e =>
+    e.id.toLowerCase().includes(keyword) || e.name.toLowerCase().includes(keyword)
+  );
+  populateEmployeeSelect(filtered);
 }
 
 function updateInventoryTable() {
@@ -45,7 +71,8 @@ function submitRecord() {
 
   if (inventory[type][size] > 0) {
     inventory[type][size]--;
-    records.push({ id, name: employee.name, type, size, date: new Date().toISOString().split('T')[0] });
+    const date = new Date().toISOString().split('T')[0];
+    records.push({ id, name: employee.name, date, type, size });
     updateInventoryTable();
     result.textContent = `✅ ${employee.name} 成功領取 ${type} 尺寸 ${size}`;
   } else {
@@ -53,8 +80,22 @@ function submitRecord() {
   }
 }
 
-document.getElementById('submitBtn').addEventListener('click', submitRecord);
-window.onload = () => {
-  loadEmployees();
-  loadInventory();
-};
+function addStock() {
+  const type = document.getElementById('addType').value;
+  const size = document.getElementById('addSize').value;
+  const qty = parseInt(document.getElementById('addQty').value);
+  if (!qty || qty <= 0) return;
+
+  inventory[type][size] += qty;
+  updateInventoryTable();
+  document.getElementById('result').textContent = `✅ 成功新增 ${qty} 件 ${type} 尺寸 ${size}`;
+}
+
+function generatePDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.setFontSize(14);
+  doc.text('制服領取報表', 15, 15);
+
+  const headers = ['員工 ID', '姓名', '領取日期', '制服類型', '尺寸'];
+  const rows = records.map(r => [r.id, r.name, r.date, r
