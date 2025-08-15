@@ -66,9 +66,13 @@ function updateInventoryTable() {
   table.innerHTML = '<tr><th>類型</th><th>尺寸</th><th>數量</th></tr>';
   for (let type in inventory) {
     for (let size in inventory[type]) {
-      table.innerHTML += `<tr><td>${type}</td><td>${size}</td><td>${inventory[type][size]}</td></tr>`;
+      const qty = inventory[type][size];
+      const style = qty < 10 ? 'low-stock' : '';
+      table.innerHTML += `<tr><td>${type}</td><td>${size}</td><td class="${style}">${qty}</td></tr>`;
     }
   }
+  const now = new Date().toLocaleString();
+  document.getElementById('lastUpdated').textContent = `最後更新時間：${now}`;
 }
 
 function submitRecord() {
@@ -97,39 +101,4 @@ function submitRecord() {
 function addStock() {
   const type = document.getElementById('addType').value;
   const size = document.getElementById('addSize').value;
-  const qty = parseInt(document.getElementById('addQty').value);
-  const result = document.getElementById('result');
-
-  if (!qty || qty <= 0) {
-    result.textContent = '❌ 請輸入有效數量';
-    return;
-  }
-
-  inventory[type][size] += qty;
-  updateInventoryTable();
-  result.textContent = `✅ 成功新增 ${qty} 件 ${type} 尺寸 ${size}`;
-}
-
-function generatePDF() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-  doc.setFontSize(14);
-  doc.text('制服領取報表', 15, 15);
-
-  const headers = ['員工 ID', '姓名', '領取日期', '制服類型', '尺寸'];
-  const rows = records.map(r => [r.id, r.name, r.date, r.type, r.size]);
-
-  doc.autoTable({
-    head: [headers],
-    body: rows,
-    startY: 25,
-    theme: 'grid'
-  });
-
-  doc.save('uniform_report.pdf');
-}
-
-window.onload = () => {
-  loadInventory();
-  loadEmployeesFromJson(); // 可選：載入預設員工資料
-};
+  const qty = parseInt(document.get
