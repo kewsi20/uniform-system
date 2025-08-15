@@ -1,99 +1,90 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>制服领取管理系统</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <style>
-    body {
-      background-color: #f8f9fa;
-    }
-    .low-stock {
-      background-color: #ffe5e5 !important;
-      color: #d00;
-      font-weight: bold;
-    }
-    .card {
-      margin-bottom: 20px;
-    }
-    .table th, .table td {
-      vertical-align: middle;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>👕 制服领取管理系统</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="style.css" />
 </head>
-<body>
-  <div class="container py-4">
-    <h1 class="text-center mb-4">制服领取管理系统</h1>
+<body class="p-4">
+  <div class="container">
+    <h1 class="mb-4">👕 制服领取管理系统</h1>
 
-    <!-- 上传员工 Excel -->
-    <div class="card">
-      <div class="card-header">上传员工 Excel</div>
-      <div class="card-body">
-        <input type="file" id="excelUpload" class="form-control" accept=".xlsx" />
-      </div>
-    </div>
-
-    <!-- 手动增加库存 -->
-    <div class="card">
-      <div class="card-header">手动增加库存</div>
-      <div class="card-body row g-3">
+    <!-- 👤 员工领取登记 -->
+    <section id="employee-section" class="mb-5">
+      <h3>👤 员工领取登记</h3>
+      <form id="receive-form" class="row g-3">
         <div class="col-md-3">
-          <select id="addType" class="form-select">
-            <option value="T-shirt">T-shirt</option>
-            <option value="Pants">Pants</option>
+          <label for="employeeName" class="form-label">姓名</label>
+          <input type="text" class="form-control" id="employeeName" required />
+        </div>
+        <div class="col-md-3">
+          <label for="uniformSize" class="form-label">尺寸</label>
+          <select class="form-select" id="uniformSize">
+            <option value="S">S</option>
+            <option value="M">M</option>
+            <option value="L">L</option>
+            <option value="XL">XL</option>
           </select>
         </div>
         <div class="col-md-3">
-          <select id="addSize" class="form-select">
-            <option>S</option><option>M</option><option>L</option><option>XL</option>
-            <option>XXL</option><option>XXXL</option><option>XXXXL</option>
-          </select>
+          <label for="receiveDate" class="form-label">领取日期</label>
+          <input type="date" class="form-control" id="receiveDate" />
         </div>
-        <div class="col-md-3">
-          <input type="number" id="addQty" class="form-control" placeholder="数量" min="1" />
+        <div class="col-md-3 d-flex align-items-end">
+          <button type="submit" class="btn btn-primary w-100">登记领取</button>
         </div>
-        <div class="col-md-3">
-          <button class="btn btn-success w-100" onclick="addInventory()">增加库存</button>
-        </div>
-      </div>
-    </div>
+      </form>
+    </section>
 
-    <!-- 员工领取登记 -->
-    <div class="card">
-      <div class="card-header">员工领取登记</div>
-      <div class="card-body row g-3">
+    <!-- ➕ 增加库存 -->
+    <section id="stock-section" class="mb-5">
+      <h3>➕ 增加库存</h3>
+      <form id="stock-form" class="row g-3">
         <div class="col-md-3">
-          <select id="employeeSelect" class="form-select"></select>
-        </div>
-        <div class="col-md-2">
-          <select id="pickupType" class="form-select">
-            <option value="T-shirt">T-shirt</option>
-            <option value="Pants">Pants</option>
+          <label for="stockSize" class="form-label">尺寸</label>
+          <select class="form-select" id="stockSize">
+            <option value="S">S</option>
+            <option value="M">M</option>
+            <option value="L">L</option>
+            <option value="XL">XL</option>
           </select>
         </div>
-        <div class="col-md-2">
-          <select id="pickupSize" class="form-select">
-            <option>S</option><option>M</option><option>L</option><option>XL</option>
-            <option>XXL</option><option>XXXL</option><option>XXXXL</option>
-          </select>
-        </div>
-        <div class="col-md-2">
-          <input type="number" id="pickupQty" class="form-control" placeholder="数量" min="1" />
-        </div>
         <div class="col-md-3">
-          <button class="btn btn-primary w-100" onclick="pickupUniform()">登记领取</button>
+          <label for="stockQty" class="form-label">数量</label>
+          <input type="number" class="form-control" id="stockQty" min="1" />
         </div>
-      </div>
-    </div>
+        <div class="col-md-3 d-flex align-items-end">
+          <button type="submit" class="btn btn-success w-100">增加库存</button>
+        </div>
+      </form>
+    </section>
 
-    <!-- 库存表格 -->
-    <h4 class="mt-5">库存汇总</h4>
-    <div class="table-responsive">
-      <table class="table table-bordered table-hover" id="inventoryTable"></table>
-    </div>
+    <!-- 📦 库存汇总 -->
+    <section id="inventory-section" class="mb-5">
+      <h3>📦 当前库存</h3>
+      <table class="table table-bordered">
+        <thead>
+          <tr>
+            <th>尺寸</th>
+            <th>数量</th>
+          </tr>
+        </thead>
+        <tbody id="inventory-table"></tbody>
+      </table>
+      <p class="text-end text-muted">🕒 Last Update: <span id="lastUpdate">--</span></p>
+    </section>
+
+    <!-- 📄 导出报表 -->
+    <section id="report-section">
+      <h3>📄 导出领取报表</h3>
+      <button class="btn btn-outline-secondary" id="exportPdf">导出 PDF</button>
+    </section>
   </div>
 
+  <script src="data.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
