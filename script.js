@@ -14,6 +14,17 @@ async function loadInventory() {
   updateInventoryTable();
 }
 
+async function loadEmployeesFromJson() {
+  try {
+    const res = await fetch('employees.json');
+    const json = await res.json();
+    employees = json;
+    populateEmployeeSelect(employees);
+  } catch (e) {
+    console.warn('未找到 employees.json，請上傳 Excel');
+  }
+}
+
 function handleExcelUpload(event) {
   const file = event.target.files[0];
   const reader = new FileReader();
@@ -22,7 +33,10 @@ function handleExcelUpload(event) {
     const workbook = XLSX.read(data, { type: 'array' });
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     const json = XLSX.utils.sheet_to_json(sheet);
-    employees = json.map(row => ({ id: String(row['employee id']), name: row['name'] }));
+    employees = json.map(row => ({
+      id: String(row['employee id']).trim(),
+      name: String(row['name']).trim()
+    }));
     populateEmployeeSelect(employees);
   };
   reader.readAsArrayBuffer(file);
@@ -84,11 +98,16 @@ function addStock() {
   const type = document.getElementById('addType').value;
   const size = document.getElementById('addSize').value;
   const qty = parseInt(document.getElementById('addQty').value);
-  if (!qty || qty <= 0) return;
+  const result = document.getElementById('result');
+
+  if (!qty || qty <= 0) {
+    result.textContent = '❌ 請輸入有效數量';
+    return;
+  }
 
   inventory[type][size] += qty;
   updateInventoryTable();
-  document.getElementById('result').textContent = `✅ 成功新增 ${qty} 件 ${type} 尺寸 ${size}`;
+  result.textContent = `✅ 成功新增 ${qty} 件 ${type} 尺寸 ${size}`;
 }
 
 function generatePDF() {
@@ -98,4 +117,19 @@ function generatePDF() {
   doc.text('制服領取報表', 15, 15);
 
   const headers = ['員工 ID', '姓名', '領取日期', '制服類型', '尺寸'];
-  const rows = records.map(r => [r.id, r.name, r.date, r
+  const rows = records.map(r => [r.id, r.name, r.date, r.type, r.size]);
+
+  doc.autoTable({
+    head: [headers],
+    body: rows,
+    startY: 25,
+    theme: 'grid'
+  });
+
+  doc.save('uniform_report.pdf');
+}
+
+window.onload = () => {
+  loadInventory();
+  loadEmployeesFromJson(); // 可選：載入預設員工資料
+};
