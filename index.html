@@ -2,97 +2,205 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>👕 制服领取管理系统</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
-  <style>
-    .low-stock {
-      background-color: #ffe5e5 !important;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>👕 制服库存与领取管理</title>
+  <link rel="stylesheet" href="style.css"/>
+  <!-- 必要库：Chart.js / SheetJS / jsPDF & autoTable -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 </head>
-<body class="p-4 bg-light">
-  <div class="container">
-    <h1 class="mb-4">👕 制服领取管理系统</h1>
+<body>
+  <header class="app-header">
+    <h1>👕 制服库存与领取管理</h1>
+    <div class="muted">让登记与盘点更轻松 · 单页应用 · 本地持久化</div>
+  </header>
+
+  <main class="container">
+
+    <!-- 📊 库存总览 + 图表 -->
+    <section class="card">
+      <div class="card-header">
+        <h2>📊 库存分布图</h2>
+        <div class="controls">
+          <label class="label">类别</label>
+          <select id="chartCategory" class="select">
+            <option value="tshirt_new">T-shirt（新）</option>
+            <option value="tshirt_old">T-shirt（旧）</option>
+            <option value="pants_new">Pants（新）</option>
+            <option value="pants_old">Pants（旧）</option>
+          </select>
+        </div>
+      </div>
+      <div class="card-body">
+        <canvas id="inventoryChart" height="120"></canvas>
+      </div>
+      <div class="card-footer right">
+        <span class="muted">🕒 Latest Updated: <span id="lastUpdatedSpan">--</span></span>
+      </div>
+    </section>
 
     <!-- ➕ 增加库存 -->
-    <section class="mb-5">
-      <h3>➕ 增加库存</h3>
-      <form id="stock-form" class="row g-3">
-        <div class="col-md-3">
-          <label class="form-label">尺寸</label>
-          <select class="form-select" id="stockSize">
+    <section class="card">
+      <div class="card-header">
+        <h2>➕ 增加库存</h2>
+      </div>
+      <form id="stockForm" class="grid grid-4 card-body">
+        <div>
+          <label class="label">类别</label>
+          <select id="stockCategory" class="select" required>
+            <option value="tshirt_new">T-shirt（新）</option>
+            <option value="tshirt_old">T-shirt（旧）</option>
+            <option value="pants_new">Pants（新）</option>
+            <option value="pants_old">Pants（旧）</option>
+          </select>
+        </div>
+        <div>
+          <label class="label">尺寸</label>
+          <select id="stockSize" class="select" required>
             <option>S</option><option>M</option><option>L</option><option>XL</option>
             <option>2XL</option><option>3XL</option><option>4XL</option><option>5XL</option>
           </select>
         </div>
-        <div class="col-md-3">
-          <label class="form-label">数量</label>
-          <input type="number" class="form-control" id="stockQty" min="1" />
+        <div>
+          <label class="label">数量</label>
+          <input id="stockQty" type="number" class="input" min="1" placeholder="例如 10" required/>
         </div>
-        <div class="col-md-3 d-flex align-items-end">
-          <button type="submit" class="btn btn-success w-100">增加库存</button>
+        <div class="align-end">
+          <button class="btn primary" type="submit">增加</button>
         </div>
       </form>
     </section>
 
     <!-- 📦 当前库存 -->
-    <section class="mb-5">
-      <h3>📦 当前库存</h3>
-      <table class="table table-bordered">
-        <thead>
-          <tr><th>尺寸</th><th>数量</th></tr>
-        </thead>
-        <tbody id="inventory-table"></tbody>
-      </table>
-      <p class="text-end text-muted">🕒 Last Update: <span id="lastUpdate">--</span></p>
+    <section class="card">
+      <div class="card-header">
+        <h2>📦 当前库存</h2>
+        <div class="controls">
+          <label class="label">筛选类别</label>
+          <select id="inventoryFilterCategory" class="select">
+            <option value="all">全部</option>
+            <option value="tshirt_new">T-shirt（新）</option>
+            <option value="tshirt_old">T-shirt（旧）</option>
+            <option value="pants_new">Pants（新）</option>
+            <option value="pants_old">Pants（旧）</option>
+          </select>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="table-wrapper">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>类别</th>
+                <th>尺寸</th>
+                <th class="right">数量</th>
+              </tr>
+            </thead>
+            <tbody id="inventoryTbody"></tbody>
+          </table>
+        </div>
+      </div>
     </section>
 
     <!-- 📤 上传员工名单 -->
-    <section class="mb-5">
-      <h3>📤 上传员工名单</h3>
-      <input type="file" id="employeeExcel" accept=".xlsx,.xls" class="form-control" />
-      <ul id="employeeList" class="mt-3"></ul>
+    <section class="card">
+      <div class="card-header">
+        <h2>📤 上传员工名单（Excel）</h2>
+      </div>
+      <div class="card-body grid grid-2">
+        <div>
+          <input type="file" id="employeeExcel" class="file" accept=".xlsx,.xls,.csv"/>
+          <div class="muted top-8">支持表头：<code>ID / Employee ID</code> 与 <code>姓名 / Employee Name</code></div>
+        </div>
+        <div>
+          <div class="list-title">已加载员工：</div>
+          <ul id="employeeList" class="list"></ul>
+        </div>
+      </div>
     </section>
 
     <!-- 👤 员工领取登记 -->
-    <section class="mb-5">
-      <h3>👤 员工领取登记</h3>
-      <form id="receive-form" class="row g-3">
-        <div class="col-md-3">
-          <label class="form-label">员工 ID</label>
-          <input type="text" class="form-control" id="employeeId" required />
+    <section class="card">
+      <div class="card-header">
+        <h2>👤 员工领取登记</h2>
+      </div>
+      <form id="receiveForm" class="grid grid-6 card-body">
+        <div>
+          <label class="label">员工 ID</label>
+          <input id="empId" class="input" placeholder="如 E001" required/>
         </div>
-        <div class="col-md-3">
-          <label class="form-label">姓名</label>
-          <input type="text" class="form-control" id="employeeName" required />
+        <div>
+          <label class="label">姓名</label>
+          <input id="empName" class="input" placeholder="姓名" required/>
         </div>
-        <div class="col-md-2">
-          <label class="form-label">尺寸</label>
-          <select class="form-select" id="uniformSize">
+        <div>
+          <label class="label">类别</label>
+          <select id="recvCategory" class="select" required>
+            <option value="tshirt_new">T-shirt（新）</option>
+            <option value="tshirt_old">T-shirt（旧）</option>
+            <option value="pants_new">Pants（新）</option>
+            <option value="pants_old">Pants（旧）</option>
+          </select>
+        </div>
+        <div>
+          <label class="label">尺寸</label>
+          <select id="recvSize" class="select" required>
             <option>S</option><option>M</option><option>L</option><option>XL</option>
             <option>2XL</option><option>3XL</option><option>4XL</option><option>5XL</option>
           </select>
         </div>
-        <div class="col-md-2">
-          <label class="form-label">领取日期</label>
-          <input type="date" class="form-control" id="receiveDate" />
+        <div>
+          <label class="label">数量</label>
+          <input id="recvQty" type="number" class="input" min="1" placeholder="例如 1" required/>
         </div>
-        <div class="col-md-2 d-flex align-items-end">
-          <button type="submit" class="btn btn-primary w-100">登记领取</button>
+        <div>
+          <label class="label">领取日期</label>
+          <input id="recvDate" type="date" class="input"/>
+        </div>
+        <div class="col-span-6 align-end">
+          <button class="btn primary" type="submit">登记领取</button>
         </div>
       </form>
     </section>
 
-    <!-- 📄 导出报表 -->
-    <section>
-      <h3>📄 导出领取报表</h3>
-      <button class="btn btn-outline-secondary" id="exportPdf">导出 PDF</button>
+    <!-- 🧾 领取记录 + 导出 -->
+    <section class="card">
+      <div class="card-header">
+        <h2>🧾 领取记录</h2>
+        <div class="controls gap">
+          <button id="exportPdf" class="btn">导出 PDF</button>
+          <button id="exportExcel" class="btn success">导出 Excel</button>
+          <button id="exportJson" class="btn outline">导出备份（JSON）</button>
+          <button id="clearAll" class="btn danger outline">清空本地数据</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="table-wrapper">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>日期</th>
+                <th>员工ID</th>
+                <th>姓名</th>
+                <th>类别</th>
+                <th>尺寸</th>
+                <th class="right">数量</th>
+              </tr>
+            </thead>
+            <tbody id="recordsTbody"></tbody>
+          </table>
+        </div>
+      </div>
     </section>
-  </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  </main>
+
+  <footer class="footer muted">
+    © Uniform Manager · 单页应用（本地持久化）。多人实时同步需后端支持。
+  </footer>
+
   <script src="script.js"></script>
 </body>
 </html>
