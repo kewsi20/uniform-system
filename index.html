@@ -1,70 +1,98 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>👕 制服库存管理</title>
+    <title>👕 制服库存管理系统</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jspdf"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
     <div class="container">
-        <h1>👔 制服库存管理系统</h1>
+        <h1>👕 制服库存管理系统</h1>
 
-        <!-- 上传员工名单 -->
-        <section>
-            <h2>📋 上传员工名单</h2>
-            <input type="file" id="employeeExcel" accept=".xlsx,.xls">
-            <ul id="employeeList"></ul>
-        </section>
+        <h2>📥 员工领取登记</h2>
+        <form id="receive-form">
+            <label>员工 ID：</label>
+            <input list="employeeIdList" id="employeeId" required>
+            <datalist id="employeeIdList"></datalist>
 
-        <!-- 增加库存 -->
-        <section>
-            <h2>📦 增加库存</h2>
-            <form id="stock-form">
-                <label>尺码:</label>
-                <select id="stockSize"></select>
-                <label>数量:</label>
-                <input type="number" id="stockQty" required>
-                <button type="submit">增加库存</button>
-            </form>
-        </section>
+            <label>姓名：</label>
+            <input id="employeeName" readonly>
 
-        <!-- 库存表格 -->
-        <section>
-            <h2>📊 库存情况</h2>
-            <table>
-                <thead>
-                    <tr><th>尺码</th><th>数量</th></tr>
-                </thead>
-                <tbody id="inventory-table"></tbody>
-            </table>
-            <p id="lastUpdate"></p>
-        </section>
+            <label>类型：</label>
+            <select id="uniformCategory">
+                <option>新T-Shirt</option>
+                <option>旧T-Shirt</option>
+                <option>新Pants</option>
+                <option>旧Pants</option>
+            </select>
 
-        <!-- 员工领取登记 -->
-        <section>
-            <h2>📝 员工领取登记</h2>
-            <form id="receive-form">
-                <label>员工编号:</label>
-                <input type="text" id="employeeId">
-                <label>员工姓名:</label>
-                <select id="employeeName"></select>
-                <label>制服尺码:</label>
-                <select id="uniformSize"></select>
-                <label>领取日期:</label>
-                <input type="date" id="receiveDate">
-                <button type="submit">登记领取</button>
-            </form>
-        </section>
+            <label>尺寸：</label>
+            <select id="uniformSize">
+                <option>S</option>
+                <option>M</option>
+                <option>L</option>
+                <option>XL</option>
+                <option>2XL</option>
+                <option>3XL</option>
+                <option>4XL</option>
+                <option>5XL</option>
+            </select>
 
-        <!-- 导出数据 -->
-        <section>
-            <h2>📤 导出数据</h2>
-            <button id="exportPdf">导出 PDF</button>
-        </section>
+            <label>日期：</label>
+            <input type="date" id="receiveDate">
+
+            <button type="submit">登记领取</button>
+        </form>
+
+        <h2>📤 上传员工名单 (Excel)</h2>
+        <input type="file" id="employeeExcel" accept=".xlsx">
+        <ul id="employeeList"></ul>
+
+        <h2>📦 增加库存</h2>
+        <form id="stock-form">
+            <label>类型：</label>
+            <select id="stockCategory">
+                <option>新T-Shirt</option>
+                <option>旧T-Shirt</option>
+                <option>新Pants</option>
+                <option>旧Pants</option>
+            </select>
+
+            <label>尺寸：</label>
+            <select id="stockSize">
+                <option>S</option>
+                <option>M</option>
+                <option>L</option>
+                <option>XL</option>
+                <option>2XL</option>
+                <option>3XL</option>
+                <option>4XL</option>
+                <option>5XL</option>
+            </select>
+
+            <label>数量：</label>
+            <input type="number" id="stockQty" required>
+
+            <button type="submit">增加库存</button>
+        </form>
+
+        <h2>📊 当前库存</h2>
+        <table>
+            <thead>
+                <tr><th>尺寸</th><th>数量</th></tr>
+            </thead>
+            <tbody id="inventory-table"></tbody>
+        </table>
+        <div id="lastUpdate"></div>
+
+        <canvas id="inventoryChart" height="150"></canvas>
+
+        <h2>📑 导出报表</h2>
+        <button id="exportPdf">导出 PDF</button>
+        <button id="exportExcel">导出 Excel</button>
     </div>
 
     <script src="script.js"></script>
